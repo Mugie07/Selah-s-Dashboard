@@ -1,2 +1,323 @@
-# Selah-s-Dashboard
-Tracking System
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selah's Dry Cleaners Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 50%, #fecaca 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { font-size: 48px; font-weight: 900; background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #dc2626 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 15px 0; }
+        .header p { color: #92400e; font-weight: 600; font-size: 18px; }
+        .controls { background: rgba(255, 255, 255, 0.8); border-radius: 20px; padding: 25px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); border: 1px solid #fcd34d; }
+        .controls label { font-weight: bold; color: #92400e; margin-right: 15px; }
+        .controls input, .controls select { padding: 10px 15px; border: 2px solid #fcd34d; border-radius: 10px; background: #fffbeb; font-weight: bold; color: #92400e; margin-right: 15px; }
+        .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric { border-radius: 20px; padding: 25px; color: white; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); }
+        .metric.rev { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .metric.exp { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .metric.prof { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .metric.avg { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); }
+        .metric-label { font-size: 12px; opacity: 0.9; margin-bottom: 5px; }
+        .metric-value { font-size: 32px; font-weight: 900; margin-bottom: 8px; }
+        .metric-desc { font-size: 12px; opacity: 0.8; }
+        .projections { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .proj-card { border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); }
+        .proj-card.rev { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 2px solid #6ee7b7; }
+        .proj-card.prof { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 2px solid #60a5fa; }
+        .proj-card.year { background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); border: 2px solid #d8b4fe; }
+        .proj-label { font-size: 12px; font-weight: bold; color: #5b21b6; margin-bottom: 8px; }
+        .proj-value { font-size: 36px; font-weight: 900; color: #065f46; margin-bottom: 15px; }
+        .proj-card.prof .proj-value { color: #1e40af; }
+        .proj-card.year .proj-value { color: #5b21b6; }
+        .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .chart-box { background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
+        .chart-box h3 { color: #92400e; font-size: 22px; margin-bottom: 20px; }
+        .chart-container { position: relative; height: 300px; }
+        .section { background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
+        .section.weekly { border: 2px solid #60a5fa; }
+        .section.monthly { border: 2px solid #d8b4fe; }
+        .section h2 { font-size: 28px; font-weight: 900; margin-bottom: 25px; }
+        .section.weekly h2 { color: #1e40af; }
+        .section.monthly h2 { color: #5b21b6; }
+        .perf-chart { position: relative; height: 350px; margin-bottom: 30px; }
+        .perf-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .pcard { border-radius: 15px; padding: 20px; border: 1px solid #dbeafe; }
+        .section.weekly .pcard { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); }
+        .section.monthly .pcard { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); }
+        .pcard-title { font-weight: bold; margin-bottom: 15px; color: #1e40af; }
+        .section.monthly .pcard-title { color: #5b21b6; }
+        .pstat { display: flex; justify-between; margin-bottom: 10px; font-size: 14px; }
+        .inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .input-box { background: rgba(255, 255, 255, 0.9); border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
+        .input-box.rev { border: 2px solid #10b981; }
+        .input-box.exp { border: 2px solid #ef4444; }
+        .input-box.item { border: 2px solid #a855f7; }
+        .input-box h3 { font-size: 22px; font-weight: 900; margin-bottom: 20px; }
+        .input-box.rev h3 { color: #10b981; }
+        .input-box.exp h3 { color: #ef4444; }
+        .input-box.item h3 { color: #a855f7; }
+        .input-field { width: 100%; padding: 12px 15px; margin-bottom: 15px; border: 2px solid #fcd34d; border-radius: 12px; font-size: 14px; background: #fffbeb; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; transition: transform 0.3s; }
+        .btn:hover { transform: scale(1.02); }
+        .btn.rev { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .btn.exp { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .btn.item { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); }
+        .list { max-height: 320px; overflow-y: auto; margin-top: 15px; }
+        .item-row { display: flex; justify-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.5); border-radius: 10px; margin-bottom: 8px; font-size: 13px; border: 1px solid #fcd34d; }
+        .del-btn { background: #dc2626; color: white; border: none; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .del-btn:hover { background: #991b1b; }
+        @media (max-width: 768px) { .metrics { grid-template-columns: repeat(2, 1fr); } .inputs { grid-template-columns: 1fr; } .header h1 { font-size: 32px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ SELAH'S DRY CLEANERS ✨</h1>
+            <p>Excellence in Every Clean</p>
+        </div>
+
+        <div class="controls">
+            <label>Current Period:</label>
+            <input type="number" id="day" min="1" max="31" value="">
+            <select id="month"></select>
+            <input type="number" id="year" value="">
+        </div>
+
+        <div class="metrics">
+            <div class="metric rev">
+                <div class="metric-label">Monthly Revenue</div>
+                <div class="metric-value" id="mrev">Shs 0</div>
+                <div class="metric-desc">Income received</div>
+            </div>
+            <div class="metric exp">
+                <div class="metric-label">Monthly Expenses</div>
+                <div class="metric-value" id="mexp">Shs 0</div>
+                <div class="metric-desc">Costs incurred</div>
+            </div>
+            <div class="metric prof">
+                <div class="metric-label">Monthly Profit</div>
+                <div class="metric-value" id="mprof">Shs 0</div>
+                <div class="metric-desc">Net earnings</div>
+            </div>
+            <div class="metric avg">
+                <div class="metric-label">Daily Average</div>
+                <div class="metric-value" id="davg">Shs 0</div>
+                <div class="metric-desc">Per day basis</div>
+            </div>
+        </div>
+
+        <div class="projections">
+            <div class="proj-card rev">
+                <div class="proj-label">Projected Monthly Revenue</div>
+                <div class="proj-value" id="pmonrev">Shs 0</div>
+                <div style="height: 4px; background: linear-gradient(90deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-bottom: 12px;"></div>
+                <div class="proj-label">Based on current tracking</div>
+            </div>
+            <div class="proj-card prof">
+                <div class="proj-label">Projected Monthly Profit</div>
+                <div class="proj-value" id="pmonprof">Shs 0</div>
+                <div style="height: 4px; background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 2px; margin-bottom: 12px;"></div>
+                <div class="proj-label">After all expenses</div>
+            </div>
+            <div class="proj-card year">
+                <div class="proj-label">Projected Yearly Revenue</div>
+                <div class="proj-value" id="pyearrev">Shs 0</div>
+                <div style="height: 4px; background: linear-gradient(90deg, #a855f7 0%, #7c3aed 100%); border-radius: 2px; margin-bottom: 12px;"></div>
+                <div class="proj-label">Yearly profit shown</div>
+            </div>
+        </div>
+
+        <div class="charts">
+            <div class="chart-box">
+                <h3>Top Service Items</h3>
+                <div class="chart-container"><canvas id="chart1"></canvas></div>
+            </div>
+            <div class="chart-box">
+                <h3>Service Distribution</h3>
+                <div class="chart-container"><canvas id="chart2"></canvas></div>
+            </div>
+        </div>
+
+        <div class="section weekly">
+            <h2>📅 Weekly Performance</h2>
+            <div class="perf-chart"><canvas id="chart3"></canvas></div>
+            <div class="perf-cards" id="weekcards"></div>
+        </div>
+
+        <div class="section monthly">
+            <h2>📈 Monthly Trends (Last 6 Months)</h2>
+            <div class="perf-chart"><canvas id="chart4"></canvas></div>
+            <div class="perf-cards" id="monthcards"></div>
+        </div>
+
+        <div class="inputs">
+            <div class="input-box rev">
+                <h3>💰 Add Revenue</h3>
+                <input type="number" id="tamount" class="input-field" placeholder="Amount (Shs)">
+                <input type="text" id="tdesc" class="input-field" placeholder="Description">
+                <button class="btn rev" onclick="addTrans()">➕ Add Revenue</button>
+                <div class="list" id="tlist"></div>
+            </div>
+
+            <div class="input-box exp">
+                <h3>📊 Add Expenses</h3>
+                <input type="number" id="eamount" class="input-field" placeholder="Amount (Shs)">
+                <input type="text" id="edesc" class="input-field" placeholder="Description">
+                <button class="btn exp" onclick="addExp()">➕ Add Expense</button>
+                <div class="list" id="elist"></div>
+            </div>
+
+            <div class="input-box item">
+                <h3>👕 Track Items</h3>
+                <input type="text" id="iname" class="input-field" placeholder="Item name">
+                <input type="number" id="iqty" class="input-field" placeholder="Quantity">
+                <button class="btn item" onclick="addItem()">➕ Add Item</button>
+                <div class="list" id="ilist"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const today = new Date();
+        document.getElementById('day').value = today.getDate();
+        document.getElementById('year').value = today.getFullYear();
+
+        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        const ms = document.getElementById('month');
+        months.forEach((m, i) => { const o = document.createElement('option'); o.value = i; o.textContent = m; ms.appendChild(o); });
+        ms.value = today.getMonth();
+
+        let trans = [], exps = [], items = [];
+        let charts = {};
+
+        function fmt(v) { return 'Shs ' + Math.round(v).toLocaleString('en-UG'); }
+
+        function getPeriod() {
+            return {
+                day: parseInt(document.getElementById('day').value),
+                month: parseInt(document.getElementById('month').value),
+                year: parseInt(document.getElementById('year').value)
+            };
+        }
+
+        function addTrans() {
+            const a = parseFloat(document.getElementById('tamount').value);
+            const d = document.getElementById('tdesc').value;
+            if (a && d) {
+                const p = getPeriod();
+                trans.push({amount: a, desc: d, day: p.day, month: p.month, year: p.year, id: Date.now()});
+                document.getElementById('tamount').value = '';
+                document.getElementById('tdesc').value = '';
+                update();
+            }
+        }
+
+        function addExp() {
+            const a = parseFloat(document.getElementById('eamount').value);
+            const d = document.getElementById('edesc').value;
+            if (a && d) {
+                const p = getPeriod();
+                exps.push({amount: a, desc: d, day: p.day, month: p.month, year: p.year, id: Date.now()});
+                document.getElementById('eamount').value = '';
+                document.getElementById('edesc').value = '';
+                update();
+            }
+        }
+
+        function addItem() {
+            const n = document.getElementById('iname').value;
+            const q = parseInt(document.getElementById('iqty').value);
+            if (n && q) {
+                const ex = items.find(i => i.name.toLowerCase() === n.toLowerCase());
+                if (ex) ex.quantity += q;
+                else items.push({name: n, quantity: q, id: Date.now()});
+                document.getElementById('iname').value = '';
+                document.getElementById('iqty').value = '';
+                update();
+            }
+        }
+
+        function delTrans(id) { trans = trans.filter(t => t.id !== id); update(); }
+        function delExp(id) { exps = exps.filter(e => e.id !== id); update(); }
+
+        function calc() {
+            const p = getPeriod();
+            const mt = trans.filter(t => t.month === p.month && t.year === p.year);
+            const me = exps.filter(e => e.month === p.month && e.year === p.year);
+            const mr = mt.reduce((s, t) => s + t.amount, 0);
+            const me_tot = me.reduce((s, e) => s + e.amount, 0);
+            const mp = mr - me_tot;
+            const dim = new Date(p.year, p.month + 1, 0).getDate();
+            const da = mr / p.day;
+            const pmr = da * dim;
+            const pmp = pmr - me_tot;
+            const pyr = pmr * 12;
+            const pyp = pmp * 12;
+            return {mr, me_tot, mp, da, pmr, pmp, pyr, pyp, dim};
+        }
+
+        function update() {
+            const c = calc();
+            document.getElementById('mrev').textContent = fmt(c.mr);
+            document.getElementById('mexp').textContent = fmt(c.me_tot);
+            document.getElementById('mprof').textContent = fmt(c.mp);
+            document.getElementById('davg').textContent = fmt(c.da);
+            document.getElementById('pmonrev').textContent = fmt(c.pmr);
+            document.getElementById('pmonprof').textContent = fmt(c.pmp);
+            document.getElementById('pyearrev').textContent = fmt(c.pyr);
+
+            const p = getPeriod();
+            const tf = trans.filter(t => t.month === p.month && t.year === p.year);
+            const ef = exps.filter(e => e.month === p.month && e.year === p.year);
+            document.getElementById('tlist').innerHTML = tf.map(t => '<div class="item-row"><div><p style="font-weight:bold;">' + fmt(t.amount) + '</p><p style="font-size:11px;opacity:0.7;">' + t.desc + '</p></div><button class="del-btn" onclick="delTrans(' + t.id + ')">×</button></div>').join('');
+            document.getElementById('elist').innerHTML = ef.map(e => '<div class="item-row"><div><p style="font-weight:bold;">' + fmt(e.amount) + '</p><p style="font-size:11px;opacity:0.7;">' + e.desc + '</p></div><button class="del-btn" onclick="delExp(' + e.id + ')">×</button></div>').join('');
+            document.getElementById('ilist').innerHTML = items.slice().sort((a, b) => b.quantity - a.quantity).map(i => '<div class="item-row"><div><p style="font-weight:bold;">' + i.name + '</p><p style="font-size:11px;opacity:0.7;">' + i.quantity + ' pieces</p></div></div>').join('');
+
+            const top = items.slice().sort((a, b) => b.quantity - a.quantity).slice(0, 5);
+            if (top.length > 0 && !charts.c1) { const ctx = document.getElementById('chart1').getContext('2d'); charts.c1 = new Chart(ctx, {type: 'bar', data: {labels: top.map(i => i.name), datasets: [{label: 'Qty', data: top.map(i => i.quantity), backgroundColor: '#f59e0b', borderRadius: 8}]}, options: {responsive: true, maintainAspectRatio: false, plugins: {legend: {display: false}}}}); }
+            if (top.length > 0 && charts.c1) { charts.c1.data.labels = top.map(i => i.name); charts.c1.data.datasets[0].data = top.map(i => i.quantity); charts.c1.update(); }
+            if (top.length > 0 && !charts.c2) { const ctx = document.getElementById('chart2').getContext('2d'); charts.c2 = new Chart(ctx, {type: 'doughnut', data: {labels: top.map(i => i.name), datasets: [{data: top.map(i => i.quantity), backgroundColor: ['#f59e0b', '#d97706', '#ea580c', '#dc2626', '#be123c']}]}, options: {responsive: true, maintainAspectRatio: false}}); }
+            if (top.length > 0 && charts.c2) { charts.c2.data.labels = top.map(i => i.name); charts.c2.data.datasets[0].data = top.map(i => i.quantity); charts.c2.update(); }
+
+            const weeks = [];
+            for (let w = 0; w < 5; w++) {
+                const sd = w * 7 + 1;
+                const ed = Math.min((w + 1) * 7, c.dim);
+                if (sd <= c.dim) {
+                    const wd = [];
+                    for (let d = sd; d <= ed; d++) wd.push(d);
+                    const wr = trans.filter(t => t.month === p.month && t.year === p.year && wd.includes(t.day)).reduce((s, t) => s + t.amount, 0);
+                    const we = exps.filter(e => e.month === p.month && e.year === p.year && wd.includes(e.day)).reduce((s, e) => s + e.amount, 0);
+                    weeks.push({label: 'Week ' + (w + 1), revenue: wr, expenses: we, profit: wr - we, days: wd});
+                }
+            }
+            if (weeks.length > 0 && !charts.c3) { const ctx = document.getElementById('chart3').getContext('2d'); charts.c3 = new Chart(ctx, {type: 'bar', data: {labels: weeks.map(w => w.label), datasets: [{label: 'Rev', data: weeks.map(w => w.revenue), backgroundColor: '#10b981'}, {label: 'Exp', data: weeks.map(w => w.expenses), backgroundColor: '#ef4444'}, {label: 'Prof', data: weeks.map(w => w.profit), backgroundColor: '#3b82f6'}]}, options: {responsive: true, maintainAspectRatio: false, scales: {y: {beginAtZero: true}}}}); }
+            if (weeks.length > 0 && charts.c3) { charts.c3.data.labels = weeks.map(w => w.label); charts.c3.data.datasets[0].data = weeks.map(w => w.revenue); charts.c3.data.datasets[1].data = weeks.map(w => w.expenses); charts.c3.data.datasets[2].data = weeks.map(w => w.profit); charts.c3.update(); }
+            let wh = ''; weeks.forEach((w, i) => { wh += '<div class="pcard"><div class="pcard-title">Week ' + (i + 1) + ' (' + w.days[0] + '-' + w.days[w.days.length - 1] + ')</div><div class="pstat"><label>Revenue:</label><span style="color: #10b981; font-weight:bold;">' + fmt(w.revenue) + '</span></div><div class="pstat"><label>Expenses:</label><span style="color: #ef4444; font-weight:bold;">' + fmt(w.expenses) + '</span></div><div class="pstat" style="border-top: 1px solid #dbeafe; padding-top: 8px; margin-top: 8px;"><label>Profit:</label><span style="color: #3b82f6; font-weight:bold;">' + fmt(w.profit) + '</span></div></div>'; }); document.getElementById('weekcards').innerHTML = wh;
+
+            const monthly = [];
+            for (let i = 5; i >= 0; i--) {
+                let m = p.month - i;
+                let y = p.year;
+                if (m < 0) { m += 12; y -= 1; }
+                const mr = trans.filter(t => t.month === m && t.year === y).reduce((s, t) => s + t.amount, 0);
+                const me = exps.filter(e => e.month === m && e.year === y).reduce((s, e) => s + e.amount, 0);
+                monthly.push({label: months[m].slice(0, 3), revenue: mr, expenses: me, profit: mr - me});
+            }
+            if (monthly.length > 0 && !charts.c4) { const ctx = document.getElementById('chart4').getContext('2d'); charts.c4 = new Chart(ctx, {type: 'line', data: {labels: monthly.map(m => m.label), datasets: [{label: 'Rev', data: monthly.map(m => m.revenue), borderColor: '#10b981', borderWidth: 3, tension: 0.4, fill: false}, {label: 'Prof', data: monthly.map(m => m.profit), borderColor: '#3b82f6', borderWidth: 3, tension: 0.4, fill: false}, {label: 'Exp', data: monthly.map(m => m.expenses), borderColor: '#ef4444', borderWidth: 3, tension: 0.4, fill: false}]}, options: {responsive: true, maintainAspectRatio: false, scales: {y: {beginAtZero: true}}}}); }
+            if (monthly.length > 0 && charts.c4) { charts.c4.data.labels = monthly.map(m => m.label); charts.c4.data.datasets[0].data = monthly.map(m => m.revenue); charts.c4.data.datasets[1].data = monthly.map(m => m.profit); charts.c4.data.datasets[2].data = monthly.map(m => m.expenses); charts.c4.update(); }
+            let mh = ''; monthly.forEach((m, i) => { const prev = i > 0 ? monthly[i - 1] : null; const rt = prev ? m.revenue - prev.revenue : 0; const pt = prev ? m.profit - prev.profit : 0; mh += '<div class="pcard"><div class="pcard-title" style="color: #5b21b6;">' + m.label + '</div><div class="pstat"><label>Revenue:</label><span style="color: #10b981; font-weight:bold;">' + fmt(m.revenue) + '</span></div>' + (rt !== 0 ? '<div style="font-size: 12px; font-weight: bold; color: ' + (rt > 0 ? '#059669' : '#dc2626') + '; margin-top: 5px;">' + (rt > 0 ? '↑' : '↓') + ' ' + fmt(Math.abs(rt)) + '</div>' : '') + '<div class="pstat"><label>Profit:</label><span style="color: #3b82f6; font-weight:bold;">' + fmt(m.profit) + '</span></div>' + (pt !== 0 ? '<div style="font-size: 12px; font-weight: bold; color: ' + (pt > 0 ? '#059669' : '#dc2626') + '; margin-top: 5px;">' + (pt > 0 ? '↑' : '↓') + ' ' + fmt(Math.abs(pt)) + '</div>' : '') + '</div>'; }); document.getElementById('monthcards').innerHTML = mh;
+        }
+
+        document.getElementById('day').addEventListener('change', update);
+        document.getElementById('month').addEventListener('change', update);
+        document.getElementById('year').addEventListener('change', update);
+
+        update();
+    </script>
+</body>
+</html>
