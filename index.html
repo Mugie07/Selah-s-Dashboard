@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>  
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -18,6 +18,7 @@
     background-size: 400% 400%;
     animation: gradientShift 15s ease infinite;
     position: relative;
+    flex-direction: column; /* ⬅️ Added this so content can stack vertically */
   }
 
   @keyframes gradientShift {
@@ -69,6 +70,15 @@
     100% { transform: translate(-50%, -50%) translateY(-20px); }
   }
 
+  /* === Company Title Added === */
+  .company-name {
+    color: black; /* ⬅️ Requested color */
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    z-index: 2; /* ensures it's above background and watermark */
+  }
+
   /* === Glassmorphic Login Box === */
   .login-box {
     background: rgba(255, 255, 255, 0.25);
@@ -81,6 +91,12 @@
     color: #003366;
     text-align: center;
     z-index: 1;
+    transition: transform 0.3s ease; /* ⬅️ Added hover animation */
+  }
+
+  /* === Hover effect for login box (optional visual lift) === */
+  .login-box:hover {
+    transform: translateY(-10px);
   }
 
   .login-box h2 {
@@ -129,6 +145,9 @@
   <!-- Soft watermark brand text -->
   <div class="watermark">Selah’s Dry Cleaners</div>
 
+  <!-- ✅ Company Name Added Above Login Box -->
+  <div class="company-name">Selah’s Dry Cleaners</div>
+
   <!-- Login Box -->
   <div class="login-box">
     <h2>Admin Login</h2>
@@ -141,9 +160,9 @@
 /* === Password Check === */
 function checkPassword() {
   const password = document.getElementById('password').value;
-  const correctPassword = 'Mugwanya77'; // Change this to your actual password
+  const correctPassword = 'Mugwanya77'; // ✅ Your secret password
   if (password === correctPassword) {
-    window.location.href = 'dashboard.html'; // redirect to dashboard
+    window.location.href = 'dashboard.html'; // ✅ Redirect to dashboard
   } else {
     document.getElementById('error').textContent = 'Incorrect password!';
   }
@@ -170,4 +189,3 @@ setInterval(createBubble, 800);
 </script>
 </body>
 </html>
-
