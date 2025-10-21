@@ -319,5 +319,76 @@
 
         update();
     </script>
+    <!-- ✅ Firebase Firestore Integration -->
+<script type="module">
+  // Import the Firebase SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ✅ Your Firebase config (paste your own values here)
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // 🔥 Initialize Firebase and Firestore
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 🧾 Function to add a transaction
+  async function addTransaction(type, amount, desc) {
+    const docRef = await addDoc(collection(db, "transactions"), {
+      type: type,
+      amount: amount,
+      desc: desc,
+      date: new Date().toLocaleDateString()
+    });
+    console.log("✅ Added transaction with ID:", docRef.id);
+    loadTransactions();
+  }
+
+  // 📥 Function to load transactions
+  async function loadTransactions() {
+    const querySnapshot = await getDocs(collection(db, "transactions"));
+    const container = document.getElementById("transactions");
+    container.innerHTML = "";
+
+    querySnapshot.forEach((doc) => {
+      const t = doc.data();
+      const row = `<div class='pstat'>
+        <span>${t.date} - ${t.type}:</span>
+        <span class='font-medium'>$${t.amount} (${t.desc})</span>
+      </div>`;
+      container.innerHTML += row;
+    });
+  }
+
+  // ✅ Replace your old addTrans() and addExp() with these:
+  window.addTrans = async function () {
+    const amount = parseFloat(document.getElementById("revAmount").value);
+    const desc = document.getElementById("revDesc").value;
+    if (!amount || !desc) return alert("Enter amount & description!");
+    await addTransaction("revenue", amount, desc);
+    document.getElementById("revAmount").value = "";
+    document.getElementById("revDesc").value = "";
+  };
+
+  window.addExp = async function () {
+    const amount = parseFloat(document.getElementById("expAmount").value);
+    const desc = document.getElementById("expDesc").value;
+    if (!amount || !desc) return alert("Enter amount & description!");
+    await addTransaction("expense", amount, desc);
+    document.getElementById("expAmount").value = "";
+    document.getElementById("expDesc").value = "";
+  };
+
+  // 🚀 Load existing data on page load
+  window.addEventListener("load", loadTransactions);
+</script>
+
 </body>
 </html>
